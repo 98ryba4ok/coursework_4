@@ -576,7 +576,7 @@ function ResultCard({ result, colors }: { result: NIHSSCalculation; colors: any 
       >
         <MaterialCommunityIcons name="file-document-outline" size={18} color={colors.accent} />
         <Text style={[resultStyles.interpretToggleText, { color: colors.accent }]}>
-          Клиническое заключение
+          Интерпретация ИИ
         </Text>
         <MaterialCommunityIcons
           name={showInterpretation ? 'chevron-up' : 'chevron-down'}

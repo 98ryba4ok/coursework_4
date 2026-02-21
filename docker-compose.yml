@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: nihss_db
+      POSTGRES_USER: nihss_user
+      POSTGRES_PASSWORD: nihss_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nihss_user -d nihss_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: nihss_db
+      DB_USER: nihss_user
+      DB_PASSWORD: nihss_pass
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn nihss.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+
+volumes:
+  postgres_data:

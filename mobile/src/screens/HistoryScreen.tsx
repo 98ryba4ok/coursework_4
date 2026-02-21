@@ -215,7 +215,7 @@ function HistoryCard({
           >
             <MaterialCommunityIcons name="file-document-outline" size={15} color={colors.accent} />
             <Text style={[styles.interpretToggleText, { color: colors.accent }]}>
-              Клиническое заключение
+              Интерпретация ИИ
             </Text>
             <MaterialCommunityIcons
               name={showInterpretation ? 'chevron-up' : 'chevron-down'}

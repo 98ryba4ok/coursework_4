@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthResponse, NIHSSCalculation, NIHSSScores, Statistics } from '../types';
 
-const BASE_URL = 'https://nihss-backend.onrender.com/api';
-// При локальной разработке: const BASE_URL = 'http://localhost:8000/api';
+//const BASE_URL = 'https://nihss-backend.onrender.com/api';
+const BASE_URL = 'http://localhost:8000/api';
 
 const api = axios.create({
   baseURL: BASE_URL,

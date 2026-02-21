@@ -5,12 +5,14 @@ services:
     plan: free
     pythonVersion: "3.12"
     buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput && python backend/manage.py migrate
-    startCommand: gunicorn --chdir backend nihss.wsgi:application
+    startCommand: gunicorn --chdir backend nihss.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: False
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: nihss-backend.onrender.com
       - key: DATABASE_URL
         fromDatabase:
           name: nihss-db
