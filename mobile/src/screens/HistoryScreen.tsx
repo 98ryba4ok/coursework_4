@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -75,78 +75,9 @@ export default function HistoryScreen() {
     return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const renderItem = ({ item }: { item: NIHSSCalculation }) => {
-    const cfg = SEVERITY_CONFIG[item.severity];
-    return (
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        {/* Верхняя часть */}
-        <View style={styles.cardTop}>
-          <View style={[styles.severityIcon, { backgroundColor: cfg.color + '22', borderColor: cfg.color + '44' }]}>
-            <MaterialCommunityIcons name={cfg.icon as any} size={24} color={cfg.color} />
-          </View>
-
-          <View style={styles.cardMain}>
-            <View style={styles.scoreRow}>
-              <Text style={[styles.scoreText, { color: colors.text }]}>{item.total_score}</Text>
-              <Text style={[styles.scoreMax, { color: colors.textSecondary }]}> / 42</Text>
-              <View style={[styles.severityBadge, { backgroundColor: cfg.color + '22', borderColor: cfg.color + '44' }]}>
-                <Text style={[styles.severityBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
-              </View>
-            </View>
-            <Text style={[styles.ageText, { color: colors.textSecondary }]}>
-              Пациент: {item.patient_age} лет
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-            style={[styles.deleteBtn, { backgroundColor: colors.severe + '18', borderColor: colors.severe + '33' }]}
-          >
-            <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.severe} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Прогресс */}
-        <View style={[styles.progressWrap, { backgroundColor: colors.surfaceVariant }]}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${(item.total_score / 42) * 100}%`,
-                backgroundColor: cfg.color,
-              },
-            ]}
-          />
-        </View>
-
-        {/* Доменные оценки */}
-        <View style={styles.domainsRow}>
-          {[
-            { label: 'Сознание', value: item.loc + item.loc_questions + item.loc_commands, icon: 'head-flash-outline' },
-            { label: 'Движение', value: item.motor_arm_left + item.motor_arm_right + item.motor_leg_left + item.motor_leg_right, icon: 'arm-flex-outline' },
-            { label: 'Речь', value: item.best_language + item.dysarthria, icon: 'microphone-outline' },
-            { label: 'Зрение', value: item.best_gaze + item.visual, icon: 'eye-outline' },
-          ].map((d, i) => (
-            <View key={i} style={styles.domainItem}>
-              <MaterialCommunityIcons name={d.icon as any} size={13} color={colors.textSecondary} />
-              <Text style={[styles.domainValue, { color: d.value > 0 ? colors.primary : colors.textSecondary }]}>
-                {d.value}
-              </Text>
-              <Text style={[styles.domainLabel, { color: colors.placeholder }]}>{d.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Дата/время */}
-        <View style={[styles.cardBottom, { borderTopColor: colors.border }]}>
-          <MaterialCommunityIcons name="calendar-outline" size={13} color={colors.placeholder} />
-          <Text style={[styles.dateText, { color: colors.placeholder }]}>
-            {formatDate(item.created_at)} в {formatTime(item.created_at)}
-          </Text>
-        </View>
-      </View>
-    );
-  };
+  const renderItem = ({ item }: { item: NIHSSCalculation }) => (
+    <HistoryCard item={item} colors={colors} onDelete={handleDelete} />
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
@@ -192,6 +123,124 @@ export default function HistoryScreen() {
         />
       )}
     </SafeAreaView>
+  );
+}
+
+// ─── Карточка истории ────────────────────────────────────────────────────────
+function HistoryCard({
+  item,
+  colors,
+  onDelete,
+}: {
+  item: NIHSSCalculation;
+  colors: any;
+  onDelete: (id: string) => void;
+}) {
+  const cfg = SEVERITY_CONFIG[item.severity];
+  const [showInterpretation, setShowInterpretation] = useState(false);
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {/* Верхняя часть */}
+      <View style={styles.cardTop}>
+        <View style={[styles.severityIcon, { backgroundColor: cfg.color + '22', borderColor: cfg.color + '44' }]}>
+          <MaterialCommunityIcons name={cfg.icon as any} size={24} color={cfg.color} />
+        </View>
+
+        <View style={styles.cardMain}>
+          <View style={styles.scoreRow}>
+            <Text style={[styles.scoreText, { color: colors.text }]}>{item.total_score}</Text>
+            <Text style={[styles.scoreMax, { color: colors.textSecondary }]}> / 42</Text>
+            <View style={[styles.severityBadge, { backgroundColor: cfg.color + '22', borderColor: cfg.color + '44' }]}>
+              <Text style={[styles.severityBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
+            </View>
+          </View>
+          <Text style={[styles.ageText, { color: colors.textSecondary }]}>
+            Пациент: {item.patient_age} лет
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => onDelete(item.id)}
+          style={[styles.deleteBtn, { backgroundColor: colors.severe + '18', borderColor: colors.severe + '33' }]}
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={18} color={colors.severe} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Прогресс */}
+      <View style={[styles.progressWrap, { backgroundColor: colors.surfaceVariant }]}>
+        <View
+          style={[
+            styles.progressFill,
+            { width: `${(item.total_score / 42) * 100}%`, backgroundColor: cfg.color },
+          ]}
+        />
+      </View>
+
+      {/* Доменные оценки */}
+      <View style={styles.domainsRow}>
+        {[
+          { label: 'Сознание', value: item.loc + item.loc_questions + item.loc_commands, icon: 'head-flash-outline' },
+          { label: 'Движение', value: item.motor_arm_left + item.motor_arm_right + item.motor_leg_left + item.motor_leg_right, icon: 'arm-flex-outline' },
+          { label: 'Речь', value: item.best_language + item.dysarthria, icon: 'microphone-outline' },
+          { label: 'Зрение', value: item.best_gaze + item.visual, icon: 'eye-outline' },
+        ].map((d, i) => (
+          <View key={i} style={styles.domainItem}>
+            <MaterialCommunityIcons name={d.icon as any} size={13} color={colors.textSecondary} />
+            <Text style={[styles.domainValue, { color: d.value > 0 ? colors.primary : colors.textSecondary }]}>
+              {d.value}
+            </Text>
+            <Text style={[styles.domainLabel, { color: colors.placeholder }]}>{d.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Клиническое заключение */}
+      {item.interpretation ? (
+        <>
+          <TouchableOpacity
+            onPress={() => setShowInterpretation((v) => !v)}
+            style={[styles.interpretToggle, { borderTopColor: colors.border }]}
+          >
+            <MaterialCommunityIcons name="file-document-outline" size={15} color={colors.accent} />
+            <Text style={[styles.interpretToggleText, { color: colors.accent }]}>
+              Клиническое заключение
+            </Text>
+            <MaterialCommunityIcons
+              name={showInterpretation ? 'chevron-up' : 'chevron-down'}
+              size={16}
+              color={colors.accent}
+            />
+          </TouchableOpacity>
+          {showInterpretation && (
+            <View style={[styles.interpretBody, { backgroundColor: colors.surfaceVariant, borderTopColor: colors.border }]}>
+              <Text style={[styles.interpretText, { color: colors.text }]}>
+                {item.interpretation}
+              </Text>
+            </View>
+          )}
+        </>
+      ) : null}
+
+      {/* Дата/время */}
+      <View style={[styles.cardBottom, { borderTopColor: colors.border }]}>
+        <MaterialCommunityIcons name="calendar-outline" size={13} color={colors.placeholder} />
+        <Text style={[styles.dateText, { color: colors.placeholder }]}>
+          {formatDate(item.created_at)} в {formatTime(item.created_at)}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -246,4 +295,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1,
   },
   dateText: { fontSize: 12 },
+  interpretToggle: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: 1,
+  },
+  interpretToggleText: { flex: 1, fontSize: 13, fontWeight: '600' },
+  interpretBody: {
+    paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1,
+  },
+  interpretText: { fontSize: 13, lineHeight: 20 },
 });

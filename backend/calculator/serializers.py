@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import User, NIHSSCalculation
 from .services import NIHSSCalculator
+from .gigachat_service import gigachat_service
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -61,7 +62,16 @@ class NIHSSCalculationCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         scores = {k: validated_data.get(k, 0) for k in NIHSSCalculator.SCORE_ITEMS}
-        total, severity, interpretation = NIHSSCalculator.calculate(scores)
+        total, severity, _ = NIHSSCalculator.calculate(scores)
+
+        interpretation = gigachat_service.generate_interpretation(
+            scores=scores,
+            total_score=total,
+            severity=severity,
+            patient_age=validated_data.get('patient_age', 0),
+            patient_notes=validated_data.get('patient_notes', ''),
+        )
+
         return NIHSSCalculation.objects.create(
             user=user,
             total_score=total,
