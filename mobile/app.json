@@ -28,6 +28,12 @@
     "plugins": [
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e28f1cd1-8769-4513-8a39-f20b738a4798"
+      }
+    },
+    "owner": "neryba4ok"
   }
 }
